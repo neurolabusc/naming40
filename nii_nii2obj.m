@@ -27,18 +27,18 @@ FV.vertices = FV.vertices(:,[2,1,3]); %isosurface swaps X/Y
 vx = [ FV.vertices ones(size(FV.vertices,1),1)];
 vx = mtimes(hdr.mat,vx')';
 FV.vertices = vx(:,1:3);
-%FV.faces = fliplr(FV.faces); %reverse winding
+FV.faces = fliplr(FV.faces); %reverse winding
 %save results
 writeObjSub(FV.vertices,FV.faces, outnm);
 %end nii_nii2obj()
 
 function [hdr, img] = readImgSub(fnm)
 [pth nm ext] = spm_fileparts(fnm);
-c1 = fullfile(pth,['wc1',nm,ext]);
-c2 = fullfile(pth,['wc2',nm,ext]);
-c3 = fullfile(pth,['wc3',nm,ext]);
-c4 = fullfile(pth,['wc4',nm,ext]);
-c5 = fullfile(pth,['wc5',nm,ext]);
+c1 = fullfile(pth,['c1',nm,ext]);
+c2 = fullfile(pth,['c2',nm,ext]);
+c3 = fullfile(pth,['c3',nm,ext]);
+c4 = fullfile(pth,['c4',nm,ext]);
+c5 = fullfile(pth,['c5',nm,ext]);
 if ~exist(c1, 'file') || ~exist(c2, 'file') || ~exist(c3, 'file') ||  ~exist(c4, 'file') || ~exist(c5, 'file')  
     hdr = spm_vol(fnm);
     img = spm_read_vols(hdr);

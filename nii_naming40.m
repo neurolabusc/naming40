@@ -12,7 +12,7 @@ if ~exist('imgDir','var')
     title = 'Select folder with fMRI*.nii and T1*.nii files';
     fprintf('%s\n', title);
     imgDir = uigetdir(pwd, title);
-    %imgDir = pwd;
+    %imgDir = pwd; %666
 end;
 cd(imgDir);
 if ~exist(imgDir,'file'), fprintf('Unable to find %s\n', imgDir); return; end;
