@@ -11,8 +11,8 @@ if isempty(spm_figure('FindWin','Graphics')), spm fmri; end; %launch SPM if it i
 if ~exist('imgDir','var')
     title = 'Select folder with fMRI*.nii and T1*.nii files';
     fprintf('%s\n', title);
-    %dir = uigetdir(pwd, title);
-    imgDir = pwd;
+    imgDir = uigetdir(pwd, title);
+    %imgDir = pwd;
 end;
 cd(imgDir);
 if ~exist(imgDir,'file'), fprintf('Unable to find %s\n', imgDir); return; end;
@@ -33,7 +33,8 @@ else
     fprintf(' Skipping analyses: to re-compute delete %s\n', matname);
 end
 m = load(matname);
-if false %666 isfield(m, 'scriptname') && exist(m.scriptname, 'file');
+%if false %666
+if  isfield(m, 'scriptname') && exist(m.scriptname, 'file');
     fprintf(' Skipping mesh generation: to re-compute delete %s\n', m.scriptname);
 else
     makeMeshesSub(matname);
