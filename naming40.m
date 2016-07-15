@@ -26,7 +26,7 @@ if ~exist(matname, 'file') %must compute analyses
         t1 = findImgsSub(imgDir, 'T1');
         fmri = findImgsSub(imgDir, 'fmri');
         if isempty(t1) || isempty(fmri)
-           return; 
+           return;
         end
    end;
    nii_block_2sess (t1, fmri)
@@ -141,7 +141,7 @@ fclose(fileID);
 function [hdr, img] = readImgSub(fnm)
 hdr = spm_vol(fnm);
 img = spm_read_vols(hdr);
-img(isnan(img)) = 0; 
+img(isnan(img)) = 0;
 % end readImgSub()
 
 function nameFiles=subFileSub(pathFolder)
@@ -154,7 +154,7 @@ function nameFiles=subImgSub(pathFolder)
 nameFiles=subFileSub(pathFolder);
 if isempty(nameFiles), return; end;
 n = nameFiles; nameFiles = [];
-for i = 1: numel(n) 
+for i = 1: numel(n)
     [~,~,x] = fileparts(char(deblank(n(i))));
     if ~strncmpi('.gz',x, 3) && ~strncmpi('.nii',x, 4), continue; end;
     nameFiles = [nameFiles; n(i)]; %#ok<AGROW>
@@ -166,7 +166,7 @@ fnm = [];
 nameFiles = subImgSub(xDir);
 if isempty(nameFiles), return; end;
 n = 0;
-for j = 1: numel(nameFiles) 
+for j = 1: numel(nameFiles)
         if strncmpi(xKey,nameFiles(j),numel(xKey))
            if n == 0, fnm = fullfile(xDir, char(nameFiles(j)) ); end;
            n = n + 1;
@@ -205,7 +205,7 @@ c2 = fullfile(pth,['c2',nm,ext]);
 c3 = fullfile(pth,['c3',nm,ext]);
 c4 = fullfile(pth,['c4',nm,ext]);
 c5 = fullfile(pth,['c5',nm,ext]);
-if ~exist(c1, 'file') || ~exist(c2, 'file') || ~exist(c3, 'file') ||  ~exist(c4, 'file') || ~exist(c5, 'file')  
+if ~exist(c1, 'file') || ~exist(c2, 'file') || ~exist(c3, 'file') ||  ~exist(c4, 'file') || ~exist(c5, 'file')
     error('Unable to find tissue maps %s..%s', c1, c5);
 end
 hdr = spm_vol(c1);
@@ -218,13 +218,13 @@ hdr = spm_vol(c4);
 img = img + spm_read_vols(hdr);
 hdr = spm_vol(c5);
 img = img + spm_read_vols(hdr);
-img(isnan(img)) = 0; 
+img(isnan(img)) = 0;
 %save sum image
-sumname = fullfile(pth,'sum.nii'); 
-hdr.fname = sumname; 
+sumname = fullfile(pth,'sum.nii');
+hdr.fname = sumname;
 spm_write_vol(hdr,img);
 newSegWriteSub(t1name, sumname);
-sumname = fullfile(pth,'wsum.nii'); 
+sumname = fullfile(pth,'wsum.nii');
 %end readImgSub()
 
 

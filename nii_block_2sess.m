@@ -19,7 +19,7 @@ end
 
 p.fmriname = fmri; %strvcat('fmriblocks009a.nii', 'fmriblocks009b.nii'); %#ok<REMFF1>
 p.t1name = t1; %'t1.nii'
-p.TRsec = 10.016; %repeat time is 1.92 seconds per volume
+p.TRsec = 10.0; %repeat time off 10 seconds
 p.slice_order = -1; %skip slice-time corrections
 p.phase =  ''; %phase image from fieldmap
 p.magn = ''; %magnitude image from fieldmap
@@ -37,7 +37,7 @@ p.onsets{1,2} = p.onsets{1,2} - (p.TRsec/2);
 if size(fmri,1) == 2
     %onsets for 2nd session, onsets{session, cond}
     p.onsets{2,1} = p.onsets{1,1};
-    p.onsets{2,2} = p.onsets{1,2};    
+    p.onsets{2,2} = p.onsets{1,2};
 end
 
 

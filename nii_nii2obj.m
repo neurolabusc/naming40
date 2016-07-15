@@ -1,26 +1,32 @@
-function outnm = nii_nii2obj (fnm, outnm)
+function outnm = nii_nii2obj (fnm, outnm, reduce)
 %convert NIfTI image to mesh
-% fnm : Image to meshify
+% fnm : nifti image to meshify
+% outname : (optional) name for output mesh 
+% reduce : (optional) reduction ration, e.g. 0.2 will decimate 80% of triangles
 %Examples
 % nii_nii2obj('c1T1.nii');
 
-reduce = 0.1; %reduce mesh complexity to 10%, smaller values for smaller files
+if ~exist('reduce','var')  %no files specified
+    reduce = 0.08; %reduce mesh complexity to 10%, smaller values for smaller files
+end
 if ~exist('fnm','var')  %no files specified
- fnm = spm_select(1,'image','Select scan to meshify');
+    fnm = spm_select(1,'image','Select scan to meshify');
 end
 if ~exist('outnm', 'var')
     [pth nm] = spm_fileparts(fnm);
     outnm = fullfile(pth, [nm '.obj']);
 end;
-[hdr, img] = readImgSub(fnm);
-%[h,i] =fileUtils.nifti.readNifti(fnm);
+%load image
+hdr = spm_vol(fnm);
+img = spm_read_vols(hdr);
+img(isnan(img)) = 0;
 %blur data
 presmooth = img+0; %+0 forces new matrix
-spm_smooth(presmooth,img,6,0); %8 voxel smooth
+spm_smooth(presmooth,img,6,0); %smooth data
 %find threshold
 thresh = (0.5 * max(img(:))-min(img(:))) + min(img(:));
 fprintf('%g threshold for %s\n', thresh, fnm);
-img = floodSub(img, thresh);
+img = floodSub(img, thresh, 2);
 FV = isosurface(img,thresh);
 FV = reducepatch(FV,reduce);
 FV.vertices = FV.vertices(:,[2,1,3]); %isosurface swaps X/Y
@@ -31,12 +37,6 @@ FV.faces = fliplr(FV.faces); %reverse winding
 %save results
 writeObjSub(FV.vertices,FV.faces, outnm);
 %end nii_nii2obj()
-
-function [hdr, img] = readImgSub(fnm)
-hdr = spm_vol(fnm);
-img = spm_read_vols(hdr);
-img(isnan(img)) = 0; 
-%end readImgSub()
 
 function writeObjSub(vertex,face,filename)
 % --- save Face/Vertex data as WaveFront Object format file
@@ -57,7 +57,7 @@ fclose(fid);
 %end writeObjSub()
 
 
-function img = floodSub(img, thresh)
+function img = floodSub(img, thresh, smoothVox)
 %similar to http://www.mathworks.com/matlabcentral/fileexchange/12184-floodfill3d
 
 imgBin = (img < thresh);
@@ -74,7 +74,9 @@ mx = max(img(:));
 img(isfinite(imgBin))= mx;
 %next: optional - blur to feather edges - only useful if marching cubes uses subvoxel smoothing
 maskIn = img + 0.0;
-spm_smooth(maskIn,img,2); %feather the edges a lot: weak blur
+if exist('smoothVox', 'var')
+    spm_smooth(maskIn, img, smoothVox); %feather the edges a lot: weak blur
+end
 %end floodSub()
 
 %Copyrights for Matlab Central Code
