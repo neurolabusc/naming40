@@ -33,28 +33,8 @@ writeObjSub(FV.vertices,FV.faces, outnm);
 %end nii_nii2obj()
 
 function [hdr, img] = readImgSub(fnm)
-[pth nm ext] = spm_fileparts(fnm);
-c1 = fullfile(pth,['c1',nm,ext]);
-c2 = fullfile(pth,['c2',nm,ext]);
-c3 = fullfile(pth,['c3',nm,ext]);
-c4 = fullfile(pth,['c4',nm,ext]);
-c5 = fullfile(pth,['c5',nm,ext]);
-if ~exist(c1, 'file') || ~exist(c2, 'file') || ~exist(c3, 'file') ||  ~exist(c4, 'file') || ~exist(c5, 'file')  
-    hdr = spm_vol(fnm);
-    img = spm_read_vols(hdr);
-    img(isnan(img)) = 0; 
-    return
-end
-hdr = spm_vol(c1);
+hdr = spm_vol(fnm);
 img = spm_read_vols(hdr);
-hdr = spm_vol(c2);
-img = img + spm_read_vols(hdr);
-hdr = spm_vol(c3);
-img = img + spm_read_vols(hdr);
-hdr = spm_vol(c4);
-img = img + spm_read_vols(hdr);
-hdr = spm_vol(c5);
-img = img + spm_read_vols(hdr);
 img(isnan(img)) = 0; 
 %end readImgSub()
 
