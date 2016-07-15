@@ -6,6 +6,7 @@ function nii_naming40(imgDir)
 % nii_naming40(pwd)
 
 fprintf('%s version 7July2016\n', mfilename);
+checkForUpdateSub(fileparts(mfilename('fullpath')));
 if isempty(which('spm')) || ~strcmp(spm('Ver'),'SPM12'), error('SPM12 required'); end;
 if isempty(spm_figure('FindWin','Graphics')), spm fmri; end; %launch SPM if it is not running
 if ~exist('imgDir','var')
@@ -173,3 +174,25 @@ end;
 if n == 0, error('Unable to find %s*.nii in %s', xKey, xDir); end;
 if n > 1, warning('Found more than one %s*.nii in %s: using %s\n', xKey, xDir, fnm); end;
 %end findImgsSub()
+
+function checkForUpdateSub(repoPath)
+prevPath = pwd;
+cd(repoPath);
+if exist('.git','dir') %only check for updates if program was installed with "git clone"
+    [s, r] = system('git fetch origin','-echo');
+    if strfind(r,'fatal')
+        warning('Unabe to check for updates. Network issue?');
+        return;
+    end
+    [~, r] = system('git status','-echo');
+    if strfind(r,'behind')
+        if askToUpdate
+            [~, r] = system('git pull','-echo');
+            showRestartMsg
+        end
+    end
+else %do nothing for now
+    warning(sprintf('To enable updates run "!git clone git@github.com:neurolabusc/%s.git"',mfilename));
+end
+cd(prevPath);
+%end checkForUpdateSub()
