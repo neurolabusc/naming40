@@ -1,9 +1,9 @@
-function nii_naming40(imgDir)
+function naming40(imgDir)
 %process sparse fMRI data from JHU
 % imgDir : (optional) folder containing *MPrage*PAR and *fMRIsparse*PAR images
 %Examples
-% nii_naming40
-% nii_naming40(pwd)
+% naming40
+% naming40(pwd)
 
 fprintf('%s version 7July2016\n', mfilename);
 checkForUpdateSub(fileparts(mfilename('fullpath')));
@@ -38,7 +38,9 @@ m = load(matname);
 if  isfield(m, 'scriptname') && exist(m.scriptname, 'file');
     fprintf(' Skipping mesh generation: to re-compute delete %s\n', m.scriptname);
 else
-    makeMeshesSub(matname);
+    makeMeshesSub(matname, false); %in warped space (optional)
+    makeMeshesSub(matname, true); %in native space
+    
 end
 if ~isfield(m, 'surficename') || ~exist(m.surficename, 'file');
     findSurficeSub(matname);
@@ -98,7 +100,8 @@ if ~exist(m.surficename, 'file'), error('Unable to find %s', m.surficename); end
 save(matname, '-struct', 'm');
 %findSurficeSub()
 
-function makeMeshesSub(matname)
+function makeMeshesSub(matname, nativeSpace)
+%Make surface of scalp and brain, show sphere at peak activation on brain and nearest scalp
 m = load(matname);
 statmask = fullfile(fileparts(which(mfilename)),'statmask.nii');
 if ~exist(statmask, 'file'), error('Unable to find %s', statmask); end;
@@ -109,6 +112,34 @@ if ~exist(statname,'file'), fprintf('Unable to find %s\n', statname); return; en
 [~, mask] = readImgSub(statmask);
 [hdr, img] =  readImgSub(statname);
 img(mask== 0) = 0;
+%next lines unique to Native-space version
+prefix = 'w'; %use normalized ('w'arped space)
+if (exist('nativeSpace','var')) && (nativeSpace)
+    prefix = ''; %use native images (not 'w'arped space)
+    %save masked image in warped space
+    maskstatname = fullfile(p,n,'mskspmT_0001.nii');
+    hdr.fname = maskstatname;
+    spm_write_vol(hdr,img);
+    [p,n] = fileparts(m.t1name);
+    inv = fullfile(p,['iy_', n, '.nii']); %inverse
+    mb{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {inv};
+    mb{1}.spm.util.defs.comp{1}.inv.space = {inv};
+    mb{1}.spm.util.defs.out{1}.push.fnames = {maskstatname};
+    mb{1}.spm.util.defs.out{1}.push.weight = {''};
+    mb{1}.spm.util.defs.out{1}.push.savedir.savepwd = 1;
+    mb{1}.spm.util.defs.out{1}.push.fov.file = {inv};
+    mb{1}.spm.util.defs.out{1}.push.preserve = 0;
+    mb{1}.spm.util.defs.out{1}.push.fwhm = [0 0 0];
+    %deform from warped mni to native space
+    spm_jobman('run',mb);
+    %the prefix 'w' is misleading, this image have been inverted to native space
+    maskstatnamex = fullfile(p,'wmskspmT_0001.nii');
+    maskstatname = fullfile(p,'invspmT_0001.nii');
+    movefile(maskstatnamex, maskstatname);
+    %load native masked image
+    [hdr, img] =  readImgSub(maskstatname);
+end
+%return to common code:
 [mx, i] = max(img(:));
 [vx(1) vx(2) vx(3)] = ind2sub(size(img),i(1));
 v2m = hdr.mat; %voxel2mm transform
@@ -117,26 +148,26 @@ fprintf('Maximum statistical intensity %g (%gx%gx%g)\n', mx, mm(1), mm(2), mm(3)
 if mx <= 0, error('No positive values in mask!'); end;
 %create meshes
 [p,n] = fileparts(m.t1name);
-bet = fullfile(p,['wb', n, '.nii']);
+bet = fullfile(p,[prefix, 'b', n, '.nii']);
 if exist(bet, 'file')
-    m.brainname = fullfile(p,'brain.obj');
+    m.brainname = fullfile(p,[prefix 'brain.obj']);
     nii_nii2obj (bet, m.brainname);
 end;
-sumname = makeSumSub(m.t1name);
-m.scalpname = fullfile(p,'scalp.obj');
+sumname = makeSumSub(m.t1name, nativeSpace);
+m.scalpname = fullfile(p, [prefix 'scalp.obj']);
 nii_nii2obj (sumname, m.scalpname);
-m.peakname = fullfile(p,'peak.obj');
+m.peakname = fullfile(p,[prefix 'peak.obj']);
 nii_mm2obj (mm(1), mm(2), mm(3), 8, m.peakname);
-m.surfacename = fullfile(p,'surface.obj');
+m.surfacename = fullfile(p,[prefix 'surface.obj']);
 nii_mm2obj (mm(1), mm(2), mm(3), 8, m.surfacename, m.scalpname);
-m.scriptname = fullfile(p,'scalp.gls');
+m.scriptname = fullfile(p,[prefix 'scalp.gls']);
 save(matname, '-struct', 'm');
 glscript = sprintf('BEGIN\n RESETDEFAULTS;\n  COLORBARVISIBLE(false);\n MESHLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n SHADERXRAY(1.0, 0.2);\nEND.', ...
      m.scalpname, m.peakname, m.surfacename, m.brainname);
 fileID = fopen(m.scriptname,'w');
 fprintf(fileID,glscript);
 fclose(fileID);
-%end makeMeshesSub()
+%end makeMeshesNativeSub()
 
 function [hdr, img] = readImgSub(fnm)
 hdr = spm_vol(fnm);
@@ -198,7 +229,7 @@ end
 cd(prevPath);
 %end checkForUpdateSub()
 
-function sumname = makeSumSub(t1name)
+function sumname = makeSumSub(t1name, nativeSpace)
 [pth nm ext] = spm_fileparts(t1name);
 c1 = fullfile(pth,['c1',nm,ext]);
 c2 = fullfile(pth,['c2',nm,ext]);
@@ -223,6 +254,7 @@ img(isnan(img)) = 0;
 sumname = fullfile(pth,'sum.nii');
 hdr.fname = sumname;
 spm_write_vol(hdr,img);
+if exist('nativeSpace', 'var') && (nativeSpace), return; end;
 newSegWriteSub(t1name, sumname);
 sumname = fullfile(pth,'wsum.nii');
 %end readImgSub()
