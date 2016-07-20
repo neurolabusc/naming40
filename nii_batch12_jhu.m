@@ -1,4 +1,4 @@
-function nii_batch12 (p)
+function nii_batch12_jhu (p)
 %preprocess and analyze fMRI data using standard settings
 % p
 %   structure for preprocessing
@@ -410,7 +410,7 @@ if ~exist('TRsec','var')  || isempty(TRsec) || (TRsec == 0)
 else
     if (TRfmri > 0) && (abs(TRsec - TRfmri) > 0.001)
        warning('Please check TR, header reports %g (not %g)\n', TRfmri, TRsec);
-    end 
+    end
 end
 if (TRsec ==0)
     answer = inputdlg('TR (sec)', 'Input required',1,{'2'});
@@ -554,7 +554,7 @@ if TRsec == 0
 else
     if (sum(ismember(fieldnames(hdr.private),'timing')) > 0) && isfield(hdr.private.timing,'tspace') && (abs(TRsec - hdr.private.timing.tspace) > 0.001)
        warning('Please check TR, header reports %g (not %g)\n', hdr.private.timing.tspace, TRsec);
-    end  
+    end
 end
 nslices = hdr.dim(3);
 if nslices <= 1 %automatically detect TR
@@ -644,7 +644,9 @@ normIntensitySub(nam);
 hdr = spm_vol(nam);
 if numel(hdr) > 1, hdr = hdr(1); error('betSub is slow with 4D images - are you sure?'); end;
 pm_brain_mask(hdr);
-bimg = spm_read_vols(spm_vol(prefixSub('bmask', nam)));
+bnam = prefixSub('bmask', nam);
+bimg = spm_read_vols(spm_vol(bnam));
+if (min(bimg(:)) == max(bimg(:)) ), error('No variability in %s', bnam); end;
 hdr = spm_vol(nam);
 img = spm_read_vols(hdr);
 thresh = max(bimg(:))/2;
@@ -662,7 +664,7 @@ img = spm_read_vols(hdr);
 if max(img(:)) == min(img(:)), return; end;
 img = img-min(img(:)); %translate to 0..max
 img = img/max(img(:)); %scale to 0..1
-hdr.pinfo = [0; 0; 352]; 
+hdr.pinfo = [0; 0; 352];
 spm_write_vol(hdr,img);
 %end normIntensitySub()
 

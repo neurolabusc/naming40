@@ -10,7 +10,7 @@ checkForUpdateSub(fileparts(mfilename('fullpath')));
 if isempty(which('spm')) || ~strcmp(spm('Ver'),'SPM12'), error('SPM12 required'); end;
 if isempty(spm_figure('FindWin','Graphics')), spm fmri; end; %launch SPM if it is not running
 if ~exist('imgDir','var')
-    title = 'Select folder with fMRI*.nii and T1*.nii files';
+    title = 'Select folder with images (fMRI*.nii and T1*.nii or raw PAR/REC files)';
     fprintf('%s\n', title);
     imgDir = uigetdir(pwd, title);
     %imgDir = pwd; %666
@@ -29,7 +29,7 @@ if ~exist(matname, 'file') %must compute analyses
            return;
         end
    end;
-   nii_block_2sess (t1, fmri)
+   nii_block_2sess_jhu (t1, fmri)
 else
     fprintf(' Skipping analyses: to re-compute delete %s\n', matname);
 end
@@ -40,7 +40,7 @@ if  isfield(m, 'scriptname') && exist(m.scriptname, 'file');
 else
     makeMeshesSub(matname, false); %in warped space (optional)
     makeMeshesSub(matname, true); %in native space
-    
+
 end
 if ~isfield(m, 'surficename') || ~exist(m.surficename, 'file');
     findSurficeSub(matname);

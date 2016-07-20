@@ -1,4 +1,4 @@
-function nii_block_2sess (t1, fmri)
+function nii_block_2sess_jhu (t1, fmri)
 %sample analysis of a block design with two sessions of data
 
 if ~exist('t1','var')  %no files specified
@@ -49,5 +49,5 @@ pth = fileparts(p.t1name);
 cd(pth);
 save('naming40.mat', '-struct', 'p');
 %run the analysis
-nii_batch12(p);
+nii_batch12_jhu(p);
 
