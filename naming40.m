@@ -5,7 +5,7 @@ function naming40(imgDir)
 % naming40
 % naming40(pwd)
 
-fprintf('%s version 7July2016\n', mfilename);
+fprintf('%s version 21July2016\n', mfilename);
 checkForUpdateSub(fileparts(mfilename('fullpath')));
 if isempty(which('spm')) || ~strcmp(spm('Ver'),'SPM12'), error('SPM12 required'); end;
 if isempty(spm_figure('FindWin','Graphics')), spm fmri; end; %launch SPM if it is not running
