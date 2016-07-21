@@ -734,9 +734,13 @@ if (min([s.duration{:}]) > 2) && (max([s.duration{:}]) < 32);
         fprintf('Block design : using %.1fs high pass filter with no temporal derivative.\n',hpf);
     end
 	temporalderiv = false;
+    if (isfield(s,'forceTemporalDeriv')) && (s.forceTemporalDeriv == true)
+        temporalderiv = true;
+        warning('Using temporal derivatives');
+    end
+
 else
     temporalderiv = true;
-
 	fprintf('Event-related design : using %.1fs high pass filter with a temporal derivative.\n',hpf);
 end;
 % MODEL SPECIFICATION
