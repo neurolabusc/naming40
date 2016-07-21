@@ -813,6 +813,10 @@ if nCond > 1
         end %for j
     end %for i
 end % > 1 conditions
+fprintf('Contrasts:\n');
+for c = 1: nContrast
+    fprintf(' %d\t%s\n', c, matlabbatch{3}.spm.stats.con.consess{c}.tcon.name); 
+end
 if temporalderiv %zero pad temporal derivations
     for c = 1 : nContrast
         for cond = 1 : nCond

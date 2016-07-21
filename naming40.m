@@ -107,7 +107,7 @@ statmask = fullfile(fileparts(which(mfilename)),'statmask.nii');
 if ~exist(statmask, 'file'), error('Unable to find %s', statmask); end;
 %find peak statistics
 [p,n] = fileparts(m.fmriname);
-statname = fullfile(p,n,'spmT_0001.nii');
+statname = fullfile(p,n,'spmT_0002.nii'); %contrast[2] is simuli > rest
 if ~exist(statname,'file'), fprintf('Unable to find %s\n', statname); return; end;
 [~, mask] = readImgSub(statmask);
 [hdr, img] =  readImgSub(statname);
