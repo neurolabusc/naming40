@@ -408,9 +408,13 @@ TRfmri = getTRSub(deblank (fmriname(1,:)));
 if ~exist('TRsec','var')  || isempty(TRsec) || (TRsec == 0)
     TRsec = TRfmri;
 else
-    if (TRfmri > 0) && (abs(TRsec - TRfmri) > 0.001)
-       warning('Please check TR, header reports %g (not %g)\n', TRfmri, TRsec);
+    if (TRfmri > 0) && (abs(TRsec - TRfmri) > 0.010)
+       error('Please check TR, header reports %g (not %g)\n', TRfmri, TRsec);
     end
+    if (TRfmri > 0) && (abs(TRsec - TRfmri) > 0.001)
+       fprintf('Using TR reported by header %g (not %g). Assuming this error reflects "dynamic stabilisation".\n', TRfmri, TRsec);
+    end
+    TRsec = TRfmri; %Philips scans with "dynamic stabilisation" can slip about 8ms per volume
 end
 if (TRsec ==0)
     answer = inputdlg('TR (sec)', 'Input required',1,{'2'});
@@ -819,7 +823,7 @@ if nCond > 1
 end % > 1 conditions
 fprintf('Contrasts:\n');
 for c = 1: nContrast
-    fprintf(' %d\t%s\n', c, matlabbatch{3}.spm.stats.con.consess{c}.tcon.name); 
+    fprintf(' %d\t%s\n', c, matlabbatch{3}.spm.stats.con.consess{c}.tcon.name);
 end
 if temporalderiv %zero pad temporal derivations
     for c = 1 : nContrast

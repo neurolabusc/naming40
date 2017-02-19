@@ -13,18 +13,17 @@ if ~exist('imgDir','var')
     title = 'Select folder with images (fMRI*.nii and T1*.nii or raw PAR/REC files)';
     fprintf('%s\n', title);
     imgDir = uigetdir(pwd, title);
-    %imgDir = pwd; %666
 end;
 cd(imgDir);
 if ~exist(imgDir,'file'), fprintf('Unable to find %s\n', imgDir); return; end;
 matname = fullfile(imgDir, 'naming40.mat');
 if ~exist(matname, 'file') %must compute analyses
    t1 = findImgsSub(imgDir, 'T1');
-   fmri = findImgsSub(imgDir, 'fmri');
+   fmri = findImgsSub(imgDir, 'fmri', true);
    if isempty(t1) || isempty(fmri)
         par2niiSub;
         t1 = findImgsSub(imgDir, 'T1');
-        fmri = findImgsSub(imgDir, 'fmri');
+        fmri = findImgsSub(imgDir, 'fmri',true);
         if isempty(t1) || isempty(fmri)
            return;
         end
@@ -106,7 +105,8 @@ m = load(matname);
 statmask = fullfile(fileparts(which(mfilename)),'statmask.nii');
 if ~exist(statmask, 'file'), error('Unable to find %s', statmask); end;
 %find peak statistics
-[p,n] = fileparts(m.fmriname);
+
+[p,n] = fileparts(m.fmriname(1,:));
 statname = fullfile(p,n,'spmT_0002.nii'); %contrast[2] is simuli > rest
 if ~exist(statname,'file'), fprintf('Unable to find %s\n', statname); return; end;
 [~, mask] = readImgSub(statmask);
@@ -162,6 +162,16 @@ m.surfacename = fullfile(p,[prefix 'surface.obj']);
 nii_mm2obj (mm(1), mm(2), mm(3), 8, m.surfacename, m.scalpname);
 m.scriptname = fullfile(p,[prefix 'scalp.gls']);
 save(matname, '-struct', 'm');
+%optional: local image names for scripts
+[p,n,x] = fileparts(m.scalpname);
+m.scalpname = fullfile([n, x]);
+[p,n,x] = fileparts(m.peakname);
+m.peakname = fullfile([n, x]);
+[p,n,x] = fileparts(m.surfacename);
+m.surfacename = fullfile([n, x]);
+[p,n,x] = fileparts(m.brainname);
+m.brainname = fullfile([n, x]);
+%create script
 glscript = sprintf('BEGIN\n RESETDEFAULTS;\n  COLORBARVISIBLE(false);\n MESHLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n OVERLAYLOAD(''%s'');\n SHADERXRAY(1.0, 0.2);\nEND.', ...
      m.scalpname, m.peakname, m.surfacename, m.brainname);
 fileID = fopen(m.scriptname,'w');
@@ -192,19 +202,31 @@ for i = 1: numel(n)
 end
 %end subFileSub()
 
-function fnm = findImgsSub( xDir, xKey)
+function fnm = findImgsSub( xDir, xKey, multipleImagesOK)
 fnm = [];
+if ~exist('multipleImagesOK','var')
+    multipleImagesOK = false;
+end
 nameFiles = subImgSub(xDir);
 if isempty(nameFiles), return; end;
 n = 0;
 for j = 1: numel(nameFiles)
         if strncmpi(xKey,nameFiles(j),numel(xKey))
-           if n == 0, fnm = fullfile(xDir, char(nameFiles(j)) ); end;
+           fn = fullfile(xDir, char(nameFiles(j)) );
+           if (n == 0) || (multipleImagesOK), 
+               fnm = [fnm; fn];  %#ok<AGROW>
+           end;
            n = n + 1;
         end
 end;
 if n == 0, error('Unable to find %s*.nii in %s', xKey, xDir); end;
-if n > 1, warning('Found more than one %s*.nii in %s: using %s\n', xKey, xDir, fnm); end;
+if (n > 1)
+    if (~multipleImagesOK)
+        warning('Found %d %s*.nii images in %s: using %s\n', n, xKey, xDir, fnm);
+    else
+        fprintf('Found %d %s*.nii images in %s: using %s\n', n, xKey, xDir);
+    end;
+end
 %end findImgsSub()
 
 function checkForUpdateSub(repoPath)
